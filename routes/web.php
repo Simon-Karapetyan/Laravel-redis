@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\BlogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,6 +17,3 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/blogs/{id}', [BlogController::class, 'index']);
-Route::post('/blogs/update/{id}', 'BlogController@update');
-Route::delete('/blogs/delete/{id}', 'BlogController@delete');

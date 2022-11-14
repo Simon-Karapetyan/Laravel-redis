@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,33 +11,39 @@ use Illuminate\Support\Facades\Redis;
 class BlogController extends Controller
 {
     /**
+     * @return JsonResponse
+     */
+    public function index(): JsonResponse
+    {
+        $cachedBlogs = Redis::keys('blog_*');
+
+        $blogs = $cachedBlogs ?? Blog::all();
+        return response()->json([
+            'status_code' => 201,
+            'message' => 'Fetched from redis',
+            'data' => $blogs,
+        ]);
+    }
+
+    /**
      * @param $id
      * @return JsonResponse
      */
-    public function index($id): JsonResponse
+    public function show($id): JsonResponse
     {
-
         $cachedBlog = Redis::get('blog_' . $id);
-
 
         if(isset($cachedBlog)) {
             $blog = json_decode($cachedBlog, FALSE);
-
-            return response()->json([
-                'status_code' => 201,
-                'message' => 'Fetched from redis',
-                'data' => $blog,
-            ]);
         } else {
             $blog = Blog::find($id);
             Redis::set('blog_' . $id, $blog);
-
-            return response()->json([
-                'status_code' => 201,
-                'message' => 'Fetched from database',
-                'data' => $blog,
-            ]);
         }
+        return response()->json([
+            'status_code' => 201,
+            'message' => 'Fetched from redis',
+            'data' => $blog,
+        ]);
     }
 
     /**
@@ -49,7 +56,6 @@ class BlogController extends Controller
         $update = Blog::findOrFail($id)->update($request->all());
 
         if($update) {
-
             // Delete blog_$id from Redis
             Redis::del('blog_' . $id);
 
